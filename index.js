@@ -5,6 +5,16 @@ const end_button = document.getElementById("end_div");
 const single_clear_button = document.getElementById("clear_div")
 const clear_button = document.getElementById("clear_all_div")
 const start_path = document.getElementById("start_path")
+const create_maze_random = document.getElementById("random_maze")
+const create_maze_vertical = document.getElementById("vertical_maze")
+const create_maze_horizontal = document.getElementById("horizontal_maze")
+const create_maze_vertical_thicc = document.getElementById("vertical_thicc_maze")
+const create_maze_acc = document.getElementById("_maze")
+const button_holder_div = document.getElementById("buttons")
+const dij_type = document.getElementById("Dij")
+const A_type = document.getElementById("A*")
+const type_drop = document.getElementById("typeDrp")
+
 
 
 var start = null;
@@ -12,9 +22,11 @@ var end = [];
 var mode = "s";
 var pathType = "dij";
 
-var height = 15
+var height = 20
 var width = parseInt(body_div.clientWidth/38)
 var dijDict = {}
+var starDict = {}
+var starColorsDict = {}
 
 for (let i = 0; i < height; i++){
     var row = document.createElement("div")
@@ -41,10 +53,14 @@ start_button.onclick = function(){mode = "s"}
 end_button.onclick = function(){mode = "e"}
 single_clear_button.onclick = function(){mode = "c"}
 clear_button.onclick = function(){clear()}
-start_path.onclick = function(){//if (num == 0){
-    start_pathing();
-    //  num++}
-    }
+start_path.onclick = function(){start_pathing();}
+create_maze_random.onclick = function(){mazeCreator("random")}
+create_maze_vertical.onclick = function(){mazeCreator("vertical")}
+create_maze_horizontal.onclick = function(){mazeCreator("horizontal")}
+create_maze_vertical_thicc.onclick = function(){mazeCreator("thicc_vertical")}
+create_maze_acc.onclick = function(){mazeCreator("mazeAttempt")}
+dij_type.onclick = function(){pathType = "dij";type_drop.innerText = "Type: Dijkstra"}
+A_type.onclick = function(){pathType = "A*"; type_drop.innerText = "Type: A*"}
 
 body_div.onmouseover = function(){
     let rows = body_div.getElementsByClassName("row")
@@ -111,7 +127,7 @@ function pickClicked(box){
             box.classList.remove("start")
         }
         else{
-            prevStart = checkFor("start")
+            let prevStart = checkFor("start")
             if (prevStart){
                 body_div.getElementsByClassName("row")[prevStart[0]].getElementsByClassName("box")[prevStart[1]].classList.remove("start")
                 box.classList.add("start")
@@ -141,9 +157,32 @@ function pickClicked(box){
         }
     }
     else if (mode === "c"){
-        box.classList.remove("start")
-        box.classList.remove("barrier")
-        box.classList.remove("end")
+        if (box.classList.contains("start")){
+            box.classList.remove("start")
+            
+        }
+        if (box.classList.contains("barrier")){
+            box.classList.remove("barrier")
+            let boxID = box.id.split(" ")
+            let boxIndex = [parseInt(boxID[0]), parseInt(boxID[1])]
+            for (let i = 0; i < barriers.length; i++){
+                if (compArr(barriers[i], boxIndex)){
+                    barriers.splice(i, 1)
+                }
+            }
+        }
+
+        if (box.classList.contains("end")){
+            box.classList.remove("end")
+            let boxID = box.id.split(" ")
+            let boxIndex = [parseInt(boxID[0]), parseInt(boxID[1])]
+            box.classList.remove("end")
+            for (let i = 0; i < end.length; i++){
+                if (compArr(end[i], boxIndex)){
+                    barriers.splice(i, 1)
+                }
+            }
+        }
     }
 }
 
@@ -178,6 +217,10 @@ function start_pathing(){
         if (pathType === "dij"){
             dijkstra()
         }
+        if (pathType === "A*"){
+            AstarDistances()
+            a_star()
+        }
     }
 }
 var tree = []
@@ -185,6 +228,7 @@ var tree = []
 var searched = []
 var searching = []
 function dijkstra(){
+    console.log("doing")
     /*
     1) create a primary list that will contain all paths
     2) starting from the start node, for each node, go around
@@ -353,4 +397,356 @@ function thingisinlist(list, thing){
         }
     }
     return false
+}
+var regButtonHolder = null;
+function mazeCreator(typeOfMaze){
+    switch(typeOfMaze){
+        case ("random"):
+            for (let i = 0; i < width*height/3; i++){
+                let index= [parseInt(Math.random()*height), parseInt(Math.random()*width)]
+                let box = body_div.getElementsByClassName("row")[index[0]].getElementsByClassName("box")[index[1]]
+                if (!box.classList.contains("barrier")){
+                    box.classList.add("barrier")
+                    barriers.push(index)
+                }
+            }
+            break;
+        case ("vertical"):
+            for (let i = 0; i < width; i+=2){
+                let hole = parseInt(Math.random()*height)
+                for (let j =0; j < height; j++){
+                    if (hole != j){
+                        let index = [j, i]
+                        let box = body_div.getElementsByClassName("row")[index[0]].getElementsByClassName("box")[index[1]]
+                        if (!box.classList.contains("barrier")){
+                            box.classList.add("barrier")
+                            barriers.push(index)
+                        }
+                    }
+                }
+            }
+            break;
+        case("horizontal"):
+            for (let i = 0; i < height; i+=2){
+                let hole = parseInt(Math.random()*width)
+                for (let j =0; j < width; j++){
+                    if (hole != j){
+                        let index = [i, j]
+                        let box = body_div.getElementsByClassName("row")[index[0]].getElementsByClassName("box")[index[1]]
+                        if (!box.classList.contains("barrier")){
+                            box.classList.add("barrier")
+                            barriers.push(index)
+                        }
+                    }
+                }
+            }
+            break;
+        case ("thicc_vertical"):
+            for (let i = 0; i < width; i+=4){
+                let hole = parseInt(Math.random()*height)
+                for (let j =0; j < height; j++){
+                    if (hole != j){
+                        let index = [j, i]
+                        let box = body_div.getElementsByClassName("row")[index[0]].getElementsByClassName("box")[index[1]]
+                        if (!box.classList.contains("barrier")){
+                            box.classList.add("barrier")
+                            barriers.push(index)
+                        }
+                        index = [j, i+1]
+                        box = body_div.getElementsByClassName("row")[index[0]].getElementsByClassName("box")[index[1]]
+                        if (!box.classList.contains("barrier")){
+                            box.classList.add("barrier")
+                            barriers.push(index)
+                        }
+                    }
+                }
+            }
+            break;
+        case ("mazeAttempt"):
+            maze()
+    }
+}
+
+function maze(){
+    let length = 5
+    let numWalls = 50
+    for (let direction = 0; direction < numWalls; direction++)
+        if (direction %2 == 0){
+            let w = parseInt(Math.random()*(width-length))
+            let x = parseInt(Math.random()*height)
+            for (let i = 0; i < length; i++){
+                let index = [x, w+i]
+                box = body_div.getElementsByClassName("row")[index[0]].getElementsByClassName("box")[index[1]]
+                if (!box.classList.contains("barrier")){
+                    box.classList.add("barrier")
+                    barriers.push(index)
+                }
+            }
+        }
+        else{
+            let h = parseInt(Math.random()*(height-length))
+            let y = parseInt(Math.random()*width)
+            for (let i = 0; i < length; i++){
+                let index = [h+i, y]
+                box = body_div.getElementsByClassName("row")[index[0]].getElementsByClassName("box")[index[1]]
+                if (!box.classList.contains("barrier")){
+                    box.classList.add("barrier")
+                    barriers.push(index)
+                }
+            }
+        }
+}
+
+
+function contain(list, val){
+    for (let i = 0 ; i < list.length; i ++){
+        if (list[i] === val){
+            return true
+        }
+    }
+    return false
+}
+
+
+
+function a_star(){
+    // weighted version of the djikstra
+    // dijkstra()
+
+    console.log("doing")
+    /*
+    1) create a primary list that will contain all paths
+    2) starting from the start node, for each node, go around
+        it for adjacent nodes and do the sutff
+    3) each time check if the end node is in the tree, if yes break
+    4) recursively go through the tree until the end node is found 
+        and then mark all those as "path class"
+    */
+   start = checkFor("start")
+   searching = [start]
+   dijDict[start.toString()] = [start]
+   console.log(end)
+    let interval = setInterval(function(){
+
+    if (searching.length === 0){
+        clearInterval(interval)
+        searching = []
+        searched = []
+    }
+    for (let j = 0 ; j < end.length; j++){
+        for (let i = 0; i < searching.length; i++){
+            if (compArr(searching[i], end[j])){
+                clearInterval(interval)
+                searching = []
+                searched = []
+                let index = end[j]
+                let st = index.toString()
+                let path = dijDict[st]
+
+                for (let k = 0; k < path.length; k++){
+                    let box = body_div.getElementsByClassName("row")[path[k][0]].getElementsByClassName("box")[path[k][1]]
+                    box.removeAttribute("style")
+                    box.classList.add("path")
+                }
+
+            }
+
+        }
+    }
+        a_star_helper()
+   },100)
+    
+
+}
+function AstarDistances(){
+    let max = 0
+    for (let i = 0; i < height; i++){
+        for (let j = 0; j < width; j++){
+            // console.log(box.id)
+            let endPoint = end[0]
+            let distance = Math.sqrt((endPoint[0] - i)**2 + (endPoint[1] - j)**2)
+            starDict[[i,j].toString()] = distance
+            if (max < distance){
+                max = distance
+            }
+        }
+    }
+    for (let i = 0; i < height; i++){
+        for (let j = 0; j < width; j++){
+            let box = body_div.getElementsByClassName("row")[i].getElementsByClassName("box")[j]
+            let interval = (255*2/max) * starDict[[i,j].toString()]
+            let g = parseInt(0 + (255-interval/2))
+            let b = parseInt(interval/2)
+            starColorsDict[[i,j].toString()] = "background-color:rgb(0," + g + ","+b+");"
+        }
+    }
+    console.log(starDict)
+}
+function a_star_helper(){
+    let arr = []
+    let branch = []
+    for (let i = 0; i < searching.length; i++){
+        let node = searching[i]
+        let box = body_div.getElementsByClassName("row")[node[0]].getElementsByClassName("box")[node[1]]
+        box.setAttribute("style", starColorsDict[node.toString()])
+        let path = dijDict[node.toString()]
+        let arr_len = arr.length
+        if (node[0] > 0){
+            let newnode = [node[0]-1, node[1]]
+            if (!thingisinlist(barriers, newnode)
+             && !thingisinlist(arr, newnode) && 
+             !thingisinlist(searched, newnode) 
+             && !thingisinlist(searching, newnode) && starDict[node.toString()] > starDict[newnode.toString()]){
+                 let newPath = path.slice()
+                 newPath.push(newnode)
+                 dijDict[newnode] = newPath
+                arr.push(newnode)
+                for (let j = 0; j < end.length; j++){
+                    if (compArr(end[j], newnode)){
+                        console.log("walkda")
+                    }
+                }
+            }
+        }
+        
+        if (node[1] > 0){
+            let newnode = [node[0], node[1]-1]
+            if (!thingisinlist(barriers, newnode)
+             && !thingisinlist(arr, newnode) &&
+              !thingisinlist(searched, newnode) && 
+            !thingisinlist(searching, newnode) && starDict[node.toString()] > starDict[newnode.toString()]){
+                let newPath = path.slice()
+                newPath.push(newnode)
+                dijDict[newnode] = newPath
+                arr.push(newnode)
+                for (let j = 0; j < end.length; j++){
+                    if (compArr(end[j], newnode)){
+                        console.log("walkda")
+                    }
+                }
+            }
+        }
+
+        if (node[0] < height-1){
+            let newnode = [node[0]+1, node[1]]
+            if (!thingisinlist(barriers, newnode) && 
+            !thingisinlist(arr, newnode) && 
+            !thingisinlist(searched, newnode) &&
+             !thingisinlist(searching, newnode) && starDict[node.toString()] > starDict[newnode.toString()]){
+                let newPath = path.slice()
+                newPath.push(newnode)
+                dijDict[newnode] = newPath
+                arr.push(newnode)
+                for (let j = 0; j < end.length; j++){
+                    if (compArr(end[j], newnode)){
+                        console.log("walkda")
+                    }
+                }
+            }
+        }
+        if (node[1] < width-1){
+            let newnode = [node[0], node[1]+1]
+            if (!thingisinlist(barriers, newnode) &&
+             !thingisinlist(arr, newnode) &&
+              !thingisinlist(searched, newnode) &&
+               !thingisinlist(searching, newnode) && starDict[node.toString()] > starDict[newnode.toString()] ){
+                let newPath = path.slice()
+                newPath.push(newnode)
+                dijDict[newnode] = newPath
+                arr.push(newnode)
+                for (let j = 0; j < end.length; j++){
+                    if (compArr(end[j], newnode)){
+                        console.log("walkda")
+                    }
+                }
+            }
+        }
+        if (node[0] > 0 && node[1] > 0){
+            let newnode = [node[0]-1, node[1] - 1]
+            if (!thingisinlist(barriers, newnode)
+             && !thingisinlist(arr, newnode) && 
+             !thingisinlist(searched, newnode) 
+             && !thingisinlist(searching, newnode) && starDict[node.toString()] > starDict[newnode.toString()]){
+                 let newPath = path.slice()
+                 newPath.push(newnode)
+                 dijDict[newnode] = newPath
+                arr.push(newnode)
+                for (let j = 0; j < end.length; j++){
+                    if (compArr(end[j], newnode)){
+                        console.log("walkda")
+                    }
+                }
+            }
+        }
+        if (node[0] < height-1 && node[1] > 0){
+            let newnode = [node[0]+1, node[1]-1]
+            if (!thingisinlist(barriers, newnode)
+             && !thingisinlist(arr, newnode) && 
+             !thingisinlist(searched, newnode) 
+             && !thingisinlist(searching, newnode) && starDict[node.toString()] > starDict[newnode.toString()]){
+                 let newPath = path.slice()
+                 newPath.push(newnode)
+                 dijDict[newnode] = newPath
+                arr.push(newnode)
+                for (let j = 0; j < end.length; j++){
+                    if (compArr(end[j], newnode)){
+                        console.log("walkda")
+                    }
+                }
+            }
+        }
+        if (node[0] < height-1 && node[1] < width-1){
+            let newnode = [node[0]+1, node[1]+1]
+            if (!thingisinlist(barriers, newnode)
+             && !thingisinlist(arr, newnode) && 
+             !thingisinlist(searched, newnode) 
+             && !thingisinlist(searching, newnode) && starDict[node.toString()] > starDict[newnode.toString()]){
+                 let newPath = path.slice()
+                 newPath.push(newnode)
+                 dijDict[newnode] = newPath
+                arr.push(newnode)
+                for (let j = 0; j < end.length; j++){
+                    if (compArr(end[j], newnode)){
+                        console.log("walkda")
+                    }
+                }
+            }
+        }
+        if (node[0] >0 && node[1] < width-1){
+            let newnode = [node[0]-1, node[1]+1]
+            if (!thingisinlist(barriers, newnode)
+             && !thingisinlist(arr, newnode) && 
+             !thingisinlist(searched, newnode) 
+             && !thingisinlist(searching, newnode) && starDict[node.toString()] > starDict[newnode.toString()]){
+                 let newPath = path.slice()
+                 newPath.push(newnode)
+                 dijDict[newnode] = newPath
+                arr.push(newnode)
+                for (let j = 0; j < end.length; j++){
+                    if (compArr(end[j], newnode)){
+                        console.log("walkda")
+                    }
+                }
+            }
+        }
+        
+    }
+    tree.push(branch)
+
+    for (let i = 0; i < searching.length; i++){
+        let node = searching[i]
+        let box =  body_div.getElementsByClassName("row")[node[0]].getElementsByClassName("box")[node[1]]
+        box.classList.remove("searching")
+        box.classList.add("searched")
+        searched.push(node)
+    }
+    searching = []
+
+    for (let i = 0; i < arr.length; i++){
+        let node = arr[i]
+        let box = body_div.getElementsByClassName("row")[node[0]].getElementsByClassName("box")[node[1]]
+        box.classList.add("searching")
+        searching.push(node)
+    }
+    arr = []
 }
