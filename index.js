@@ -21,8 +21,8 @@ var start = null;
 var end = [];
 var mode = "s";
 var pathType = "dij";
-
-var height = 20
+console.log(body_div.clientHeight)
+var height = parseInt(body_div.clientHeight/38)
 var width = parseInt(body_div.clientWidth/38)
 var dijDict = {}
 var starDict = {}
@@ -554,7 +554,7 @@ function a_star(){
         }
     }
         a_star_helper()
-   },100)
+   },50)
     
 
 }
