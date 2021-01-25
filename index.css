@@ -15,7 +15,11 @@ header{
     text-align: center;
 
 }
+#instructions{
 
+    text-align: center;
+    font-family: 'Asap', sans-serif;
+}
 #header_container{
     position: relative;
     width:100%;
@@ -69,6 +73,7 @@ header{
 #body_container{
     background-color: white;
     margin:10px;
+    height: 75%;
 }
 .row{
     text-align: center;
