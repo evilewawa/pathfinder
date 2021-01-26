@@ -160,3 +160,11 @@ header{
     margin: 5px;
     padding: 5px;
 }
+#name{
+    color: white
+
+}
+#name:hover{
+    transition: .75s;
+    color:black
+}
