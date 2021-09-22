@@ -22,8 +22,8 @@ var end = [];
 var mode = "s";
 var pathType = "dij";
 console.log(body_div.clientHeight)
-var height = parseInt(body_div.clientHeight/38)
-var width = parseInt(body_div.clientWidth/38)
+var height = parseInt(body_div.clientHeight/25)
+var width = parseInt(body_div.clientWidth/25)
 var dijDict = {}
 var starDict = {}
 var starColorsDict = {}
